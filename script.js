@@ -406,7 +406,7 @@ function hideError() { errorMessage.style.display = 'none'; }
 // --- PEGA TUS FUNCIONES DE GRÁFICOS AQUÍ ---
 
 function updateChartCarousel() {
-    const offset = -currentChartIndex * 100;
+    const offset = -currentChartIndex * 25;
     carouselTrack.style.transform = `translateX(${offset}%)`;
 }
 
