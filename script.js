@@ -8,7 +8,6 @@ let currentPage = 1;
 const rowsPerPage = 10;
 let currentChartIndex = 0;
 
-// --- ELEMENTOS DEL DOM ---
 const fileInput = document.getElementById('fileInput');
 const imageInput = document.getElementById('imageInput');
 const uploadSection = document.getElementById('uploadSection');
@@ -31,7 +30,6 @@ const prevChartBtn = document.getElementById('prevChartBtn');
 const nextChartBtn = document.getElementById('nextChartBtn');
 const totalCharts = 4;
 
-// --- EVENT LISTENERS ---
 fileInput.addEventListener('change', handleFileSelect);
 imageInput.addEventListener('change', handleImageSelect);
 uploadSection.addEventListener('dragover', (e) => { e.preventDefault(); uploadSection.classList.add('dragover'); });
@@ -60,7 +58,6 @@ nextChartBtn.addEventListener('click', () => {
     updateChartCarousel();
 });
 
-// --- MANEJO DE ARCHIVOS ---
 function handleFileSelect(e) {
     const file = e.target.files[0];
     if (file) handleFile(file);
@@ -69,8 +66,6 @@ function handleFileSelect(e) {
 function handleImageSelect(e) {
     imageFiles = Array.from(e.target.files);
     imageCount.textContent = `${imageFiles.length} imágenes cargadas`;
-    
-    // Limpiar URLs anteriores y crear nuevas
     imageFileUrls.forEach(url => URL.revokeObjectURL(url));
     imageFileUrls.clear();
     imageFiles.forEach(file => {
@@ -79,7 +74,7 @@ function handleImageSelect(e) {
             imageFileUrls.set(normalizedName, URL.createObjectURL(file));
         }
     });
-    // Si ya hay datos cargados, refrescar la tabla para mostrar las imágenes
+
     if (parsedData.length > 0) {
         displayData();
     }
@@ -122,7 +117,6 @@ function processData(data) {
     downloadSection.classList.add('show');
 }
 
-// --- LÓGICA DE VISUALIZACIÓN ---
 function displayData() {
     const searchTerm = searchInput.value.toLowerCase();
     filteredData = parsedData.filter(row => Object.values(row).some(value => String(value).toLowerCase().includes(searchTerm)));
@@ -161,7 +155,6 @@ function updatePaginationControls(totalPages) {
     nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
 }
 
-// --- CÁLCULOS Y ESTADÍSTICAS ---
 function calculateStats(data) {
     const totalPersonas = data.length;
     const diasArray = data.map(row => parseInt(row.dias_distintos) || 0);
@@ -189,13 +182,11 @@ function calculateStats(data) {
     stats.classList.add('show');
 }
 
-// --- MANEJO DE IMÁGENES ---
 function normalizeImageName(fileName) {
     try {
         const nameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.'));
         const parts = nameWithoutExtension.split(' - ');
         if (parts.length > 1) {
-            // El nombre es la última parte del array
             return parts[parts.length - 1].trim().toUpperCase();
         }
     } catch (e) {
@@ -210,7 +201,6 @@ function findImageUrlForPerson(personName) {
     return imageFileUrls.get(normalizedPersonName) || null;
 }
 
-// --- LÓGICA DE GRÁFICOS (sin cambios) ---
 function updateChartCarousel() { /* ... sin cambios ... */ }
 function createCharts(data) { /* ... sin cambios ... */ }
 function createDistributionChart(data) { /* ... sin cambios ... */ }
@@ -218,10 +208,7 @@ function createTopPersonsChart(data) { /* ... sin cambios ... */ }
 function createDelitosChart(data) { /* ... sin cambios ... */ }
 function createWeekdayChart(data) { /* ... sin cambios ... */ }
 function destroyCharts() { Object.values(charts).forEach(chart => { if (chart) chart.destroy(); }); charts = {}; }
-// Pega aquí las funciones de creación de gráficos de tu código original para que funcione
-// ...
 
-// --- DESCARGAS Y UTILIDADES ---
 function downloadExcel() {
     if (parsedData.length === 0) { showError('No hay datos para exportar'); return; }
     const wb = XLSX.utils.book_new();
@@ -242,7 +229,6 @@ async function downloadPDF() {
     const margin = 15;
     let yPosition = 20;
 
-    // --- TÍTULO Y FECHA ---
     pdf.setFontSize(18).setFont(undefined, 'bold');
     pdf.text('Reporte de Detenciones', pageWidth / 2, yPosition, { align: 'center' });
     yPosition += 8;
@@ -250,7 +236,6 @@ async function downloadPDF() {
     pdf.text(`Generado el: ${new Date().toLocaleDateString('es-MX')}`, pageWidth / 2, yPosition, { align: 'center' });
     yPosition += 15;
 
-    // --- TABLA DE ESTADÍSTICAS ---
     pdf.setFontSize(12).setFont(undefined, 'bold');
     pdf.text('Estadísticas Generales', margin, yPosition);
     
@@ -269,7 +254,6 @@ async function downloadPDF() {
     });
     yPosition = pdf.autoTable.previous.finalY + 15;
 
-    // --- SECCIÓN DE GRÁFICAS ---
     pdf.setFontSize(12).setFont(undefined, 'bold');
     pdf.text('Análisis Gráfico', margin, yPosition);
     yPosition += 8;
@@ -292,7 +276,6 @@ async function downloadPDF() {
         }
     }
 
-    // --- TABLA CON REGISTROS, FOTOS Y DETALLES ---
     if (parsedData.length > 0) {
         if (yPosition > pageHeight - 40) {
             pdf.addPage();
@@ -330,7 +313,6 @@ async function downloadPDF() {
 
         const head = [['Foto', 'Persona', 'Días', 'Delitos', 'Detalle del Delito']];
         const body = tableData.map((row, index) => [
-            // ▼▼▼ CAMBIO 1: Dejar la celda de datos vacía para no imprimir el texto Base64 ▼▼▼
             '', 
             row.persona || '',
             row.dias_distintos || '0',
@@ -338,7 +320,7 @@ async function downloadPDF() {
             row.detalle_delito || ''
         ]);
 
-        const imageSize = 18; // mm
+        const imageSize = 18;
 
         pdf.autoTable({
             head: head,
@@ -355,7 +337,6 @@ async function downloadPDF() {
             },
             didDrawCell: function(data) {
                 if (data.section === 'body' && data.column.index === 0) {
-                    // ▼▼▼ CAMBIO 2: Usar el índice de la fila para obtener la imagen correcta del array pre-cargado ▼▼▼
                     const base64Image = loadedImagesBase64[data.row.index];
                     if (base64Image) {
                         const x = data.cell.x + (data.cell.width - imageSize) / 2;
@@ -403,7 +384,6 @@ function resetApp() {
 
 function showError(message) { errorMessage.textContent = message; errorMessage.style.display = 'block'; }
 function hideError() { errorMessage.style.display = 'none'; }
-// --- PEGA TUS FUNCIONES DE GRÁFICOS AQUÍ ---
 
 function updateChartCarousel() {
     const offset = -currentChartIndex * 25;
@@ -484,9 +464,8 @@ function createWeekdayChart(data) {
         fechas.forEach(fecha => {
             const f = fecha.trim();
             if (f) {
-                const dateParts = f.split(/[-/]/); // Soporta aaaa-mm-dd o aaaa/mm/dd
+                const dateParts = f.split(/[-/]/);
                 if (dateParts.length === 3) {
-                    // new Date(año, mes - 1, día)
                     const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                     if (!isNaN(date)) {
                         const dayName = weekdayNames[date.getDay()];
